@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Python Portable/Anaconda environments
+portable_python/
+Miniconda/
+
+# Secrets
+*.env
+.env
+config.json
+
+# Data
+*.db
+*.sqlite3
+*.npy
+*.csv
+
+# IDE files
+.vscode/
+.idea/
