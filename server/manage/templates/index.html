@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orchestrator Dashboard</title>
+    <!-- Load Chart.js for our plots -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f4f7;
+            --card-bg: #ffffff;
+            --border-color: #e2e2e8;
+            --text-color: #333333;
+            --text-light: #777777;
+            --primary-color: #5a67d8;
+            --primary-hover: #434190;
+            --green: #38a169;
+            --red: #e53e3e;
+            --orange: #dd6b20;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 24px;
+        }
+        h1, h2, h3 {
+            margin-top: 0;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.25rem;
+            margin-bottom: 24px;
+        }
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box; /* Important for 100% width */
+        }
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-danger {
+            background-color: var(--red);
+            color: white;
+        }
+        /* Flash Messages */
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 24px 0;
+        }
+        .flash {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .flash.success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        .flash.error {
+            background-color: #fed7d7;
+            color: #822727;
+            border: 1px solid #feb2b2;
+        }
+        
+        /* Status Display */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-block;
+        }
+        .status-IDLE { background-color: var(--text-light); color: white; }
+        .status-TRAINING { background-color: var(--green); color: white; }
+        .status-PAUSED { background-color: var(--orange); color: white; }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .status-item {
+            background-color: var(--bg-color);
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .status-item strong {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+        .status-item span {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background-color: var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            width: 0%; /* Will be set by JS */
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+            text-align: center;
+            line-height: 24px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Worker Lists */
+        .worker-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .worker-list li {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .worker-list li:last-child {
+            border-bottom: none;
+        }
+        .worker-id {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        .worker-status {
+            font-weight: 600;
+        }
+        .status-Online { color: var(--green); }
+        .status-Offline { color: var(--red); }
+        .token {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="full-width">
+            <h1>Orchestrator Dashboard</h1>
+            
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                <li class="flash {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Training Status Card -->
+        <div class="card full-width">
+            <h2>Training Status</h2>
+            {% if training_state and training_state.status != 'IDLE' %}
+                <!-- TRAINING/PAUSED View -->
+                <div class="status-grid">
+                    <div class="status-item">
+                        <strong>STATUS</strong>
+                        <span class="status-badge status-{{ training_state.status }}">{{ training_state.status }}</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>EPOCH</strong>
+                        <span>{{ training_state.current_epoch }} / {{ training_state.total_epochs }}</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>MODEL</strong>
+                        <span>{{ training_state.current_model }}</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>DATASET</strong>
+                        <span>{{ training_state.current_dataset }}</span>
+                    </div>
+                </div>
+                
+                <div class="status-item" style="margin-top: 16px;">
+                    <strong>EPOCH PROGRESS</strong>
+                    {% set completed = training_state.completed_tasks | length %}
+                    {% set total = training_state.task_queue | length + completed %}
+                    {% set progress = (completed / total * 100) if total > 0 else 0 %}
+                    <div class="progress-bar">
+                        <div class="progress-bar-inner" style="width: {{ progress }}%;" id="progress-bar-inner">
+                            {{ "%.0f" | format(progress) }}%
+                        </div>
+                    </div>
+                    <span style="font-size: 1rem; color: var(--text-light); margin-top: 8px; display:block;">
+                        {{ completed }} / {{ total }} batches completed
+                    </span>
+                </div>
+                
+                <form action="{{ url_for('stop_training') }}" method="POST" style="margin-top: 24px;">
+                    <button type="submit" class="btn btn-danger">Stop Training Run</button>
+                </form>
+
+            {% else %}
+                <!-- IDLE View (Training Controls) -->
+                <p>System is <strong>IDLE</strong>. Configure and start a new training run.</p>
+                <form action="{{ url_for('start_training') }}" method="POST">
+                    <div class="status-grid">
+                        <div class="form-group">
+                            <label for="model_name">Model Name</label>
+                            <input type="text" id="model_name" name="model_name" value="ABIDE_CNN_v1">
+                        </div>
+                        <div class="form-group">
+                            <label for="dataset_name">Dataset Name</label>
+                            <input type="text" id="dataset_name" name="dataset_name" value="ABIDE_FCM_CPAC">
+                        </div>
+                        <div class="form-group">
+                            <label for="learning_rate">Learning Rate</label>
+                            <input type="text" id="learning_rate" name="learning_rate" value="0.001">
+                        </div>
+                        <div class="form-group">
+                            <label for="total_epochs">Total Epochs</label>
+                            <input type="number" id="total_epochs" name="total_epochs" value="10">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Start Training</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        <!-- Live Charts -->
+        <div class="card full-width">
+            <h2>Live Metrics</h2>
+            <div class="status-grid">
+                <div>
+                    <h3>Training Loss</h3>
+                    <canvas id="lossChart"></canvas>
+                </div>
+                <div>
+                    <h3>Validation Accuracy</h3>
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Worker Management -->
+        <div class="card">
+            <h2>Worker Approval</h2>
+            <p>Approve new workers by entering their 8-digit token.</p>
+            <form action="{{ url_for('approve_worker') }}" method="POST">
+                <div class="form-group">
+                    <label for="token">Worker Token</label>
+                    <input type="text" id="token" name="token" placeholder="1234-5678" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Approve</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Pending Workers ({{ pending_workers | length }})</h2>
+            <ul class="worker-list">
+                {% if pending_workers %}
+                    {% for worker in pending_workers %}
+                    <li>
+                        <div>
+                            <span class="token">{{ worker.token[:4] + '-' + worker.token[4:] }}</span>
+                            <span class="worker-id">ID: {{ worker.worker_id[:8] }}...</span>
+                        </div>
+                        <span class="worker-status status-Offline">
+                            {{ worker.last_seen | timestamp_to_pretty }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No pending workers.</li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <div class="card full-width">
+            <h2>Approved Workers ({{ approved_workers | length }})</h2>
+            <ul class="worker-list">
+                {% if approved_workers %}
+                    {% for worker in approved_workers %}
+                    <li>
+                        <span class="worker-id">ID: {{ worker.worker_id }}</span>
+                        <span class="worker-status status-{{ worker.status }}">
+                            {{ worker.status }} 
+                            ({{ worker.last_seen | timestamp_to_pretty }})
+                        </span>
+                    </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No approved workers.</li>
+                {% endif %}
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        let lossChart, accuracyChart;
+        let lossData = [];
+        let accuracyData = [];
+
+        // Function to create the charts
+        function createCharts() {
+            const lossCtx = document.getElementById('lossChart').getContext('2d');
+            lossChart = new Chart(lossCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Training Loss',
+                        data: [],
+                        borderColor: 'rgb(229, 62, 62)',
+                        backgroundColor: 'rgba(229, 62, 62, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } },
+                    animation: { duration: 200 }
+                }
+            });
+
+            const accCtx = document.getElementById('accuracyChart').getContext('2d');
+            accuracyChart = new Chart(accCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Validation Accuracy',
+                        data: [],
+                        borderColor: 'rgb(56, 161, 105)',
+                        backgroundColor: 'rgba(56, 161, 105, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true, max: 1 } },
+                    animation: { duration: 200 }
+                }
+            });
+        }
+
+        // Function to update chart data
+        function updateChartData() {
+            fetch("/chart-data") // <-- FIX: Replaced Jinja {{ url_for(...) }} with a relative path
+                .then(response => response.json())
+                .then(data => {
+                    // Update Loss Chart
+                    lossData = data.loss || [];
+                    lossChart.data.labels = lossData.map((_, i) => i + 1);
+                    lossChart.data.datasets[0].data = lossData;
+                    lossChart.update();
+
+                    // Update Accuracy Chart
+                    accuracyData = data.accuracy || [];
+                    accuracyChart.data.labels = accuracyData.map((_, i) => i + 1);
+                    accuracyChart.data.datasets[0].data = accuracyData;
+                    accuracyChart.update();
+                })
+                .catch(error => console.error("Error fetching chart data:", error));
+        }
+
+        // Auto-refresh the whole page to get new worker/status data
+        // A more advanced app would use websockets, but this is simple and robust.
+        setInterval(() => {
+            location.reload();
+        }, 5000); // Reload every 5 seconds
+
+        // On page load, create charts and fetch initial data
+        window.onload = () => {
+            createCharts();
+            updateChartData(); // Fetch data immediately on load
+            
+            // We also set interval for charts in case page reload is slow
+            setInterval(updateChartData, 2000); // Update charts every 2s
+        };
+    </script>
+</body>
+</html>
+
+
