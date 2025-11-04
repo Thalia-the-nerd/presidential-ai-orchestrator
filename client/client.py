@@ -13,8 +13,8 @@ import random
 
 # --- Configuration ---
 # This URL should point to your home server's Nginx proxy
-API_URL = "http://146.168.99.93:10040/"
-# API_URL = "http://192.168.1.100:10041" # <-- Use this for local testing if needed
+#API_URL = "http://146.168.99.93:10040/"
+API_URL = "http://192.168.0.117:10041" # <-- Use this for local testing if needed
 
 WORKER_CONFIG_FILE = "worker.json"
 HEARTBEAT_INTERVAL = 10 # Seconds
