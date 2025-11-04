@@ -1,0 +1,24 @@
+# This file defines the services that make up our application's backend.
+# We are starting with just one service: our Redis message broker.
+
+version: '3.8'
+
+services:
+  # This is the service name we will use to connect from our Python scripts.
+  redis:
+    # We use the official Redis image, with the 'alpine' tag for a smaller size.
+    image: "redis:alpine"
+    
+    # This is the hostname of the redis container on the docker network.
+    # Our Python orchestrator will connect to this hostname.
+    hostname: redis
+    
+    # This maps the port inside the container (6379) to the same port on our
+    # host machine. This allows us to connect to Redis from Python code
+    # running on our local machine during development.
+    ports:
+      - "6379:6379"
+      
+    # (Optional, but good practice for resilience)
+    # This ensures that if the Redis container crashes, Docker will restart it automatically.
+    restart: always
