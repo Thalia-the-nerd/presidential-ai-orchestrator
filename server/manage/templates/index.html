@@ -4,282 +4,429 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orchestrator Dashboard</title>
-    <!-- Load Chart.js for our plots -->
+    <!-- Load Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         :root {
-            --bg-color: #f4f4f7;
-            --card-bg: #ffffff;
-            --border-color: #e2e2e8;
-            --text-color: #333333;
-            --text-light: #777777;
-            --primary-color: #5a67d8;
-            --primary-hover: #434190;
-            --green: #38a169;
-            --red: #e53e3e;
-            --orange: #dd6b20;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --text-primary: #1c1e21;
+            --text-muted: #606770;
+            --border-color: #dddfe2;
+            --accent-blue: #0866ff;
+            --green: #31a24c;
+            --red: #e41e3f;
+            --yellow: #f5a623;
         }
         body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
         }
-        h1, h2, h3 {
-            margin-top: 0;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h1 {
+            font-size: 24px;
             font-weight: 600;
-        }
-        h1 {
-            font-size: 2.25rem;
-            margin-bottom: 24px;
-        }
-        h2 {
-            font-size: 1.5rem;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 8px;
-            margin-bottom: 16px;
+            margin: 0;
         }
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            padding: 24px;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
             gap: 24px;
         }
+        .column-main {
+            flex-basis: 70%;
+            flex-grow: 1;
+            min-width: 0; /* Prevents flex overflow */
+        }
+        .column-side {
+            flex-basis: 30%;
+            flex-grow: 1;
+            min-width: 320px;
+        }
         .card {
-            background-color: var(--card-bg);
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .card.full-width {
-            grid-column: 1 / -1;
-        }
-        .form-group {
+        .card-header {
+            font-size: 20px;
+            font-weight: 600;
             margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
         }
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-sizing: border-box; /* Important for 100% width */
-        }
-        .btn {
-            padding: 12px 16px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-        .btn-danger {
-            background-color: var(--red);
-            color: white;
-        }
-        /* Flash Messages */
-        .flash-messages {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 24px 0;
-        }
-        .flash {
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-        .flash.success {
-            background-color: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
-        }
-        .flash.error {
-            background-color: #fed7d7;
-            color: #822727;
-            border: 1px solid #feb2b2;
-        }
-        
-        /* Status Display */
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            display: inline-block;
-        }
-        .status-IDLE { background-color: var(--text-light); color: white; }
-        .status-TRAINING { background-color: var(--green); color: white; }
-        .status-PAUSED { background-color: var(--orange); color: white; }
-
-        .status-grid {
+        .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
-        .status-item {
-            background-color: var(--bg-color);
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+        .btn {
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary { background-color: var(--accent-blue); color: #fff; }
+        .btn-danger { background-color: var(--red); color: #fff; }
+        .btn-warning { background-color: var(--yellow); color: #000; }
+        .btn-secondary { background-color: #e4e6eb; color: #000; }
+        .btn-link { background: none; color: var(--accent-blue); padding: 0; font-size: 13px; font-weight: 500; }
+        .btn:disabled { background-color: #ccd0d5; cursor: not-allowed; }
+        .form-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-item {
+            background-color: var(--bg-primary);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-item .label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .stat-item .value { font-size: 24px; font-weight: 700; }
+        .value.status-IDLE { color: var(--text-muted); }
+        .value.status-TRAINING { color: var(--green); }
+        .value.status-PAUSED { color: var(--yellow); }
+
+        /* Charts */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            max-height: 300px;
+            background-color: var(--bg-primary);
             padding: 16px;
             border-radius: 8px;
         }
-        .status-item strong {
-            display: block;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            margin-bottom: 4px;
-        }
-        .status-item span {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-        
-        /* Progress Bar */
-        .progress-bar {
-            width: 100%;
-            height: 24px;
-            background-color: var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-        .progress-bar-inner {
-            height: 100%;
-            width: 0%; /* Will be set by JS */
-            background-color: var(--primary-color);
-            transition: width 0.3s ease;
-            text-align: center;
-            line-height: 24px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
+        /* Make loss chart span full width if no accuracy data */
+        .chart-container.full-width {
+            grid-column: 1 / -1;
         }
 
         /* Worker Lists */
         .worker-list {
             list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         .worker-list li {
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
-        .worker-list li:last-child {
-            border-bottom: none;
+        .worker-info {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            min-width: 150px;
         }
         .worker-id {
             font-family: monospace;
-            font-size: 0.9rem;
-            color: var(--text-light);
-        }
-        .worker-status {
+            font-size: 13px;
             font-weight: 600;
         }
+        .worker-device {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        .worker-status-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .worker-status { font-size: 13px; font-weight: 500; }
         .status-Online { color: var(--green); }
         .status-Offline { color: var(--red); }
-        .token {
-            font-family: monospace;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
+        .worker-time { font-size: 12px; color: var(--text-muted); }
         
+        /* Per-worker controls */
+        .worker-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .worker-controls .btn { padding: 4px 8px; font-size: 12px; }
+
+        /* Flash Messages */
+        .flash-messages {
+            list-style: none;
+            padding: 0 24px;
+            margin: 24px 0 -12px 0; /* Positioned above container */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .flash { padding: 16px; border-radius: 6px; font-weight: 500; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* Log Viewer */
+        .log-container {
+            height: 300px;
+            background-color: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow-y: scroll;
+            padding: 12px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .log-entry {
+            display: flex;
+            gap: 16px;
+        }
+        .log-time { color: var(--text-muted); white-space: nowrap; }
+        .log-level-EVENT { color: var(--accent-blue); font-weight: 600; }
+        .log-level-INFO { color: var(--text-primary); }
+        .log-level-ERROR { color: var(--red); font-weight: 600; }
+        .log-message { white-space: pre-wrap; word-break: break-all; }
+
+        /* Checkpoint List */
+        .checkpoint-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+        .checkpoint-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+        .checkpoint-info {
+            font-family: monospace;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .checkpoint-info .name { font-weight: 600; }
+        .checkpoint-info .acc { color: var(--green); }
+        .checkpoint-controls { display: flex; gap: 8px; flex-shrink: 0; }
+        .checkpoint-controls .btn { padding: 4px 8px; font-size: 12px; }
+        
+        /* Modal */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+        }
+        .modal-content {
+            background-color: var(--bg-secondary);
+            margin: 15% auto;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+        }
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 900px) {
+            .column-main, .column-side { flex-basis: 100%; }
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>Orchestrator Dashboard</h1>
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+            {% for category, message in messages %}
+                <li class="flash {{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
     <div class="container">
-        
-        <div class="full-width">
-            <h1>Orchestrator Dashboard</h1>
-            
-            <!-- Flash messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <ul class="flash-messages">
-                {% for category, message in messages %}
-                <li class="flash {{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-            {% endwith %}
-        </div>
 
-        <!-- Training Status Card -->
-        <div class="card full-width">
-            <h2>Training Status</h2>
-            {% if training_state and training_state.status != 'IDLE' %}
-                <!-- TRAINING/PAUSED View -->
-                <div class="status-grid">
-                    <div class="status-item">
-                        <strong>STATUS</strong>
-                        <span class="status-badge status-{{ training_state.status }}">{{ training_state.status }}</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>EPOCH</strong>
-                        <span>{{ training_state.current_epoch }} / {{ training_state.total_epochs }}</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>MODEL</strong>
-                        <span>{{ training_state.current_model }}</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>DATASET</strong>
-                        <span>{{ training_state.current_dataset }}</span>
-                    </div>
-                </div>
+        <!-- Main Column (Dashboard, Charts, Log) -->
+        <div class="column column-main">
+            
+            <!-- Dashboard Card -->
+            <div class="card">
+                <div class="card-header">Global Training Status</div>
                 
-                <div class="status-item" style="margin-top: 16px;">
-                    <strong>EPOCH PROGRESS</strong>
-                    {% set completed = training_state.completed_tasks | length %}
-                    {% set total = training_state.task_queue | length + completed %}
-                    {% set progress = (completed / total * 100) if total > 0 else 0 %}
-                    <div class="progress-bar">
-                        <div class="progress-bar-inner" style="width: {{ progress }}%;" id="progress-bar-inner">
-                            {{ "%.0f" | format(progress) }}%
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="label">STATUS</div>
+                        <div class="value status-{{ training_state.status | default('IDLE') }}">
+                            {{ training_state.status | default('N/A') }}
                         </div>
                     </div>
-                    <span style="font-size: 1rem; color: var(--text-light); margin-top: 8px; display:block;">
-                        {{ completed }} / {{ total }} batches completed
-                    </span>
+                    <div class="stat-item">
+                        <div class="label">EPOCH</div>
+                        <div class="value">
+                            {{ training_state.current_epoch | default(0) }} / {{ training_state.total_epochs | default(0) }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">BATCH PROGRESS</div>
+                        <div class="value">
+                            {{ training_state.completed_tasks | length }} / {{ (training_state.task_queue | length) + (training_state.completed_tasks | length) }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">TIME ELAPSED</div>
+                        <div class="value">{{ training_state.time_elapsed | default('00:00:00') }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">EST. TIME REMAINING</div>
+                        <div class="value">{{ training_state.eta | default('00:00:00') }}</div>
+                    </div>
                 </div>
-                
-                <form action="{{ url_for('stop_training') }}" method="POST" style="margin-top: 24px;">
-                    <button type="submit" class="btn btn-danger">Stop Training Run</button>
-                </form>
 
-            {% else %}
-                <!-- IDLE View (Training Controls) -->
-                <p>System is <strong>IDLE</strong>. Configure and start a new training run.</p>
-                <form action="{{ url_for('start_training') }}" method="POST">
-                    <div class="status-grid">
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="accuracyChart"></canvas>
+                    </div>
+                    <!-- Confusion Matrix -->
+                    <div class="chart-container">
+                        <canvas id="confusionMatrixChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="card">
+                <div class="card-header">Live Activity Log</div>
+                <div class="log-container" id="logContainer">
+                    {% for log in training_state.activity_log %}
+                        <div class="log-entry">
+                            <span class="log-time">{{ log.time | timestamp_to_pretty }}</span>
+                            <span class="log-level-{{ log.level }}">{{ log.level }}</span>
+                            <span class="log-message">{{ log.message }}</span>
+                        </div>
+                    {% else %}
+                        <div class="log-entry">
+                            <span class="log-message">System is IDLE. Start a training run to see logs.</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Side Column (Controls & Workers) -->
+        <div class="column column-side">
+
+            <!-- Controls Card -->
+            <div class="card">
+                <div class="card-header">Controls</div>
+                
+                <form id="startTrainingForm" action="{{ url_for('start_training') }}" method="POST">
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label for="model_name">Model Name</label>
+                            <label for="model_name">Model</label>
                             <input type="text" id="model_name" name="model_name" value="ABIDE_CNN_v1">
                         </div>
                         <div class="form-group">
-                            <label for="dataset_name">Dataset Name</label>
+                            <label for="dataset_name">Dataset</label>
                             <input type="text" id="dataset_name" name="dataset_name" value="ABIDE_FCM_CPAC">
                         </div>
                         <div class="form-group">
@@ -287,168 +434,328 @@
                             <input type="text" id="learning_rate" name="learning_rate" value="0.001">
                         </div>
                         <div class="form-group">
-                            <label for="total_epochs">Total Epochs</label>
+                            <label for="total_epochs">Epochs</label>
                             <input type="number" id="total_epochs" name="total_epochs" value="10">
                         </div>
+                        <!-- Hyperparameters -->
+                        <div class="form-group full-width">
+                            <label for="hyperparameters">Hyperparameters (JSON)</label>
+                            <textarea id="hyperparameters" name="hyperparameters" placeholder='{ "batch_size": 32, "dropout": 0.5 }'>{{ training_state.hyperparameters | tojson(indent=2) }}</textarea>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Start Training</button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" 
+                            {% if training_state.status != 'IDLE' %}disabled{% endif %}>
+                            Start Training
+                        </button>
                 </form>
-            {% endif %}
-        </div>
-        
-        <!-- Live Charts -->
-        <div class="card full-width">
-            <h2>Live Metrics</h2>
-            <div class="status-grid">
-                <div>
-                    <h3>Training Loss</h3>
-                    <canvas id="lossChart"></canvas>
-                </div>
-                <div>
-                    <h3>Validation Accuracy</h3>
-                    <canvas id="accuracyChart"></canvas>
-                </div>
+                
+                <!-- Global Pause/Resume/Stop -->
+                <form action="{{ url_for('set_global_state') }}" method="POST" style="margin: 0;">
+                    {% if training_state.status == 'PAUSED' %}
+                        <input type="hidden" name="state" value="TRAINING">
+                        <button type="submit" class="btn btn-primary">Resume</button>
+                    {% else %}
+                        <input type="hidden" name="state" value="PAUSED">
+                        <button type="submit" class="btn btn-warning"
+                            {% if training_state.status != 'TRAINING' %}disabled{% endif %}>
+                            Pause
+                        </button>
+                    {% endif %}
+                </form>
+                
+                <form action="{{ url_for('stop_training') }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to stop training?');">
+                        <button type="submit" class="btn btn-danger"
+                            {% if training_state.status == 'IDLE' %}disabled{% endif %}>
+                            Stop Training
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+            <!-- Worker Management Card -->
+            <div class="card">
+                <div class="card-header">Worker Management</div>
+                
+                <form action="{{ url_for('approve_worker') }}" method="POST">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="token">Approve New Worker</label>
+                        <input type="text" id="token" name="token" placeholder="Enter 8-digit token">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Approve</button>
+                </form>
+
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">Pending Workers ({{ pending_workers | length }})</h3>
+                <ul class="worker-list">
+                    {% for worker in pending_workers %}
+                        <li>
+                            <div class="worker-info">
+                                <span class="worker-id">Token: <strong>{{ worker.token }}</strong></span>
+                            </div>
+                            <div class="worker-controls">
+                                <span class="worker-time">Seen: {{ worker.last_seen | timestamp_to_pretty }}</span>
+                                <!-- Kick Pending Worker -->
+                                <form action="{{ url_for('kick_worker') }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to kick this pending worker?');">
+                                    <input type="hidden" name="worker_id" value="{{ worker.worker_id }}">
+                                    <button type="submit" class="btn btn-danger">Kick</button>
+                                </form>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li>No pending workers.</li>
+                    {% endfor %}
+                </ul>
+
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">Approved Workers ({{ approved_workers | length }})</h3>
+                <ul class="worker-list">
+                    {% for worker in approved_workers %}
+                        <li>
+                            <div class="worker-info">
+                                <span class="worker-id">
+                                    {{ worker.nickname or worker.worker_id[:12] + '...' }}
+                                    <button class="btn btn-link" onclick="openNicknameModal('{{ worker.worker_id }}', '{{ worker.nickname or '' }}')">(Edit)</button>
+                                </span>
+                                <span class="worker-status status-{{ worker.status }}">
+                                    ({{ worker.status }})
+                                </span>
+                                <span class="worker-device">{{ worker.device or 'Unknown Device' }}</span>
+                            </div>
+                            
+                            <div class="worker-controls">
+                                <form action="{{ url_for('set_worker_state') }}" method="POST" style="margin: 0;">
+                                    <input type="hidden" name="worker_id" value="{{ worker.worker_id }}">
+                                    {% if worker.desired_state == 'PAUSE' %}
+                                        <input type="hidden" name="state" value="TRAIN">
+                                        <button type="submit" class="btn btn-secondary">Resume</button>
+                                    {% else %}
+                                        <input type="hidden" name="state" value="PAUSE">
+                                        <button type="submit" class="btn btn-secondary" 
+                                            {% if worker.status == 'Offline' %}disabled{% endif %}>
+                                            Pause
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                <form action="{{ url_for('kick_worker') }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to KICK this approved worker?');">
+                                    <input type="hidden" name="worker_id" value="{{ worker.worker_id }}">
+                                    <button type="submit" class="btn btn-danger">Kick</button>
+                                </form>
+                            </div>
+                            <div class="worker-time" style="width: 100%; text-align: right;">Seen: {{ worker.last_seen | timestamp_to_pretty }}</div>
+                        </li>
+                    {% else %}
+                        <li>No approved workers.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Checkpoint Management Card -->
+            <div class="card">
+                <div class="card-header">Checkpoint Management</div>
+                <form action="{{ url_for('save_checkpoint') }}" method="POST">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 16px;"
+                        {% if training_state.status == 'IDLE' %}disabled{% endif %}>
+                        Save Checkpoint Now
+                    </button>
+                </form>
+                <ul class="checkpoint-list">
+                    {% for ckpt in training_state.checkpoints %}
+                    <li class="checkpoint-item">
+                        <div class="checkpoint-info">
+                            <div class="name" title="{{ ckpt.name }}">{{ ckpt.name }}</div>
+                            <div class="acc">Accuracy: {{ (ckpt.accuracy * 100) | round(2) }}%</div>
+                        </div>
+                        <div class="checkpoint-controls">
+                            <!-- Rollback -->
+                            <form action="{{ url_for('rollback_checkpoint') }}" method="POST" style="margin: 0;" onsubmit="return confirm('This will STOP training and load this checkpoint. Are you sure?');">
+                                <input type="hidden" name="checkpoint_name" value="{{ ckpt.name }}">
+                                <button type="submit" class="btn btn-secondary">Load</button>
+                            </form>
+                            <!-- Download -->
+                            <a href="{{ url_for('download_checkpoint', name=ckpt.name) }}" class="btn btn-secondary">Get</a>
+                        </div>
+                    </li>
+                    {% else %}
+                        <li>No checkpoints saved for this run.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
-        
-        <!-- Worker Management -->
-        <div class="card">
-            <h2>Worker Approval</h2>
-            <p>Approve new workers by entering their 8-digit token.</p>
-            <form action="{{ url_for('approve_worker') }}" method="POST">
-                <div class="form-group">
-                    <label for="token">Worker Token</label>
-                    <input type="text" id="token" name="token" placeholder="1234-5678" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Approve</button>
-            </form>
-        </div>
+    </div>
 
-        <div class="card">
-            <h2>Pending Workers ({{ pending_workers | length }})</h2>
-            <ul class="worker-list">
-                {% if pending_workers %}
-                    {% for worker in pending_workers %}
-                    <li>
-                        <div>
-                            <span class="token">{{ worker.token[:4] + '-' + worker.token[4:] }}</span>
-                            <span class="worker-id">ID: {{ worker.worker_id[:8] }}...</span>
-                        </div>
-                        <span class="worker-status status-Offline">
-                            {{ worker.last_seen | timestamp_to_pretty }}
-                        </span>
-                    </li>
-                    {% endfor %}
-                {% else %}
-                    <li>No pending workers.</li>
-                {% endif %}
-            </ul>
+    <!-- Nickname Edit Modal -->
+    <div id="nicknameModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-header">Edit Worker Nickname</span>
+            <input type="hidden" id="modalWorkerId">
+            <div class="form-group">
+                <label for="modalNickname">Nickname</label>
+                <input type="text" id="modalNickname" placeholder="e.g., Lab PC 1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeNicknameModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitNickname()">Save</button>
+            </div>
         </div>
-        
-        <div class="card full-width">
-            <h2>Approved Workers ({{ approved_workers | length }})</h2>
-            <ul class="worker-list">
-                {% if approved_workers %}
-                    {% for worker in approved_workers %}
-                    <li>
-                        <span class="worker-id">ID: {{ worker.worker_id }}</span>
-                        <span class="worker-status status-{{ worker.status }}">
-                            {{ worker.status }} 
-                            ({{ worker.last_seen | timestamp_to_pretty }})
-                        </span>
-                    </li>
-                    {% endfor %}
-                {% else %}
-                    <li>No approved workers.</li>
-                {% endif %}
-            </ul>
-        </div>
-
     </div>
 
     <script>
-        let lossChart, accuracyChart;
-        let lossData = [];
-        let accuracyData = [];
-
-        // Function to create the charts
-        function createCharts() {
-            const lossCtx = document.getElementById('lossChart').getContext('2d');
-            lossChart = new Chart(lossCtx, {
+        let lossChart, accuracyChart, confusionMatrixChart;
+        const CHART_REFRESH_INTERVAL = 2000;
+        const PAGE_REFRESH_INTERVAL = 5000;
+        
+        // --- Chart Config ---
+        function createLineChart(ctx, label) {
+            return new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Training Loss',
-                        data: [],
-                        borderColor: 'rgb(229, 62, 62)',
-                        backgroundColor: 'rgba(229, 62, 62, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    scales: { y: { beginAtZero: true } },
-                    animation: { duration: 200 }
+                data: { labels: [], datasets: [{ label: label, data: [], borderColor: 'var(--accent-blue)', backgroundColor: 'rgba(8, 102, 255, 0.1)', borderWidth: 2, pointRadius: 0, tension: 0.1, fill: true }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { color: 'var(--text-muted)' }, grid: { color: 'var(--border-color)' } }, 
+                        x: { ticks: { color: 'var(--text-muted)' }, grid: { display: false } } 
+                    }, 
+                    plugins: { 
+                        legend: { display: true, labels: { color: 'var(--text-primary)' } } 
+                    } 
                 }
             });
-
-            const accCtx = document.getElementById('accuracyChart').getContext('2d');
-            accuracyChart = new Chart(accCtx, {
-                type: 'line',
+        }
+        
+        function createDoughnutChart(ctx) {
+            return new Chart(ctx, {
+                type: 'doughnut',
                 data: {
-                    labels: [],
+                    labels: ['True Pos (ASD)', 'False Neg (ASD)', 'False Pos (Control)', 'True Neg (Control)'],
                     datasets: [{
-                        label: 'Validation Accuracy',
-                        data: [],
-                        borderColor: 'rgb(56, 161, 105)',
-                        backgroundColor: 'rgba(56, 161, 105, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
+                        label: 'Confusion Matrix',
+                        data: [0, 0, 0, 0], // e.g., [TP, FN, FP, TN]
+                        backgroundColor: [ 'var(--green)', 'var(--yellow)', 'var(--red)', 'var(--accent-blue)' ],
+                        borderColor: 'var(--bg-secondary)',
+                        borderWidth: 2
                     }]
                 },
-                options: {
-                    scales: { y: { beginAtZero: true, max: 1 } },
-                    animation: { duration: 200 }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: 'var(--text-primary)' } }, 
+                        title: { display: true, text: 'Confusion Matrix (Epoch Snapshot)', color: 'var(--text-primary)'} 
+                    } 
                 }
             });
         }
 
-        // Function to update chart data
+        // --- Chart Data Update Function ---
         function updateChartData() {
-            fetch("/chart-data") // <-- FIX: Replaced Jinja {{ url_for(...) }} with a relative path
-                .then(response => response.json())
+            fetch("/chart-data")
+                .then(response => response.ok ? response.json() : Promise.reject(response))
                 .then(data => {
-                    // Update Loss Chart
-                    lossData = data.loss || [];
-                    lossChart.data.labels = lossData.map((_, i) => i + 1);
-                    lossChart.data.datasets[0].data = lossData;
-                    lossChart.update();
+                    const lossData = data.loss || [];
+                    const accuracyData = data.accuracy || [];
+                    const cmData = data.confusion_matrix || [[0,0],[0,0]];
 
-                    // Update Accuracy Chart
-                    accuracyData = data.accuracy || [];
-                    accuracyChart.data.labels = accuracyData.map((_, i) => i + 1);
-                    accuracyChart.data.datasets[0].data = accuracyData;
-                    accuracyChart.update();
+                    // 1. Update Loss Chart
+                    if (lossChart) {
+                        lossChart.data.labels = lossData.map((_, i) => i + 1);
+                        lossChart.data.datasets[0].data = lossData;
+                        lossChart.update('none'); 
+                    }
+                    
+                    // 2. Update Accuracy Chart
+                    if (accuracyChart) {
+                        accuracyChart.data.labels = accuracyData.map((_, i) => i + 1);
+                        accuracyChart.data.datasets[0].data = accuracyData;
+                        accuracyChart.update('none');
+                    }
+                    
+                    // 3. Update Confusion Matrix
+                    if (confusionMatrixChart) {
+                        // Our API sends [[TP, FN], [FP, TN]]
+                        // We flatten it to [TP, FN, FP, TN] for the chart
+                        confusionMatrixChart.data.datasets[0].data = [cmData[0][0], cmData[0][1], cmData[1][0], cmData[1][1]];
+                        confusionMatrixChart.update('none');
+                    }
                 })
                 .catch(error => console.error("Error fetching chart data:", error));
         }
 
-        // Auto-refresh the whole page to get new worker/status data
-        // A more advanced app would use websockets, but this is simple and robust.
-        setInterval(() => {
-            location.reload();
-        }, 5000); // Reload every 5 seconds
-
-        // On page load, create charts and fetch initial data
-        window.onload = () => {
-            createCharts();
-            updateChartData(); // Fetch data immediately on load
+        // --- Nickname Modal Logic ---
+        const modal = document.getElementById('nicknameModal');
+        const modalWorkerId = document.getElementById('modalWorkerId');
+        const modalNickname = document.getElementById('modalNickname');
+        
+        function openNicknameModal(workerId, currentNickname) {
+            modalWorkerId.value = workerId;
+            modalNickname.value = currentNickname;
+            modal.style.display = 'block';
+            modalNickname.focus();
+        }
+        function closeNicknameModal() {
+            modal.style.display = 'none';
+        }
+        function submitNickname() {
+            const workerId = modalWorkerId.value;
+            const nickname = modalNickname.value;
             
-            // We also set interval for charts in case page reload is slow
-            setInterval(updateChartData, 2000); // Update charts every 2s
+            // Use fetch to send the data as JSON
+            fetch("{{ url_for('set_worker_nickname') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ worker_id: workerId, nickname: nickname })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload(); // Easiest way to show change
+                } else {
+                    alert('Failed to set nickname.');
+                }
+            });
+            closeNicknameModal();
+        }
+        // Close modal if user clicks outside of it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeNicknameModal();
+            }
+        }
+
+        // --- Page Load ---
+        window.onload = function() {
+            // Create charts
+            lossChart = createLineChart(document.getElementById('lossChart').getContext('2d'), 'Training Loss (Last 500 Batches)');
+            accuracyChart = createLineChart(document.getElementById('accuracyChart').getContext('2d'), 'Validation Accuracy (Per Epoch)');
+            confusionMatrixChart = createDoughnutChart(document.getElementById('confusionMatrixChart').getContext('2d'));
+            
+            // Fetch data immediately
+            updateChartData();
+            
+            // Set intervals
+            setInterval(updateChartData, CHART_REFRESH_INTERVAL);
+            
+            // Only auto-reload if there are no flash messages
+            {% if not get_flashed_messages() %}
+            setTimeout(() => {
+                // Only reload if not focused on an input/modal and not hovering
+                let isHovering = !!document.querySelector("button:hover, input:hover, a:hover, textarea:hover");
+                
+                if ((!modal || modal.style.display === 'none') && !isHovering) {
+                    if (document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+                        window.location.reload();
+                    }
+                }
+            }, PAGE_REFRESH_INTERVAL);
+            {% endif %}
+            
+            // Scroll log to bottom
+            const logContainer = document.getElementById('logContainer');
+            if(logContainer) {
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
         };
     </script>
+
 </body>
 </html>
 

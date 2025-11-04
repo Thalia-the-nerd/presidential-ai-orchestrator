@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Orchestrator Dashboard</title>
+    <style>
+        /* CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --text-primary: #1c1e21;
+            --text-muted: #606770;
+            --border-color: #dddfe2;
+            --accent-blue: #0866ff;
+            --red: #e41e3f;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+        .card {
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+        .card-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .form-group input {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .btn {
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+        }
+        .btn-primary { 
+            background-color: var(--accent-blue); 
+            color: #fff; 
+            margin-top: 8px;
+        }
+
+        /* Flash Messages */
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .flash {
+            padding: 16px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash {{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Login Card -->
+        <div class="card">
+            <div class-="card-header">
+                Orchestrator Login
+            </div>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
+

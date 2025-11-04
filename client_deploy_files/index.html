@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presidential AI Challenge - Client Deployment</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #374151; /* Dark Gray */
+            --color-secondary: #f3f4f6; /* Light Gray/Off-White */
+            --color-text: #1f2937; /* Very Dark Gray */
+            --color-accent: #10b981; /* Emerald/Green */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-secondary);
+            color: var(--color-text);
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background-color: #1f2937;
+        }
+        .step-num {
+            background-color: var(--color-accent);
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .file-list a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            transition: background-color 0.1s;
+        }
+        .file-list a:hover {
+            background-color: #eff6ff;
+        }
+        code {
+            background-color: #e5e7eb;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen">
+
+    <div class="max-w-4xl mx-auto py-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800">Client Deployment Portal</h1>
+            <p class="text-xl text-gray-600 mt-2">Presidential AI Challenge: Setup Your Worker PC</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Files Column -->
+            <div class="lg:col-span-1 card p-6 h-fit sticky top-8">
+                <h2 class="text-2xl font-semibold mb-6 border-b pb-3 text-gray-700">1. Download Client Files</h2>
+                <div class="file-list space-y-3">
+                    <a href="client.py" download="client.py">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                            <span class="font-mono text-lg">client.py</span>
+                        </span>
+                        <span class="text-sm text-gray-500">Download</span>
+                    </a>
+                    <a href="requirements.txt" download="requirements.txt">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-3-3v6M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span class="font-mono text-lg">requirements.txt</span>
+                        </span>
+                        <span class="text-sm text-gray-500">Download</span>
+                    </a>
+                </div>
+                <p class="mt-4 text-sm text-gray-500">Save both files to the root of your portable USB drive.</p>
+            </div>
+
+            <!-- Instructions Column -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Setup Instructions -->
+                <div class="card p-6">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700">2. Setup Instructions (The Portable Environment)</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="flex">
+                            <span class="step-num mr-4">A</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Install Portable Python (Miniconda)</p>
+                                <p class="text-gray-600">Install your chosen portable Python distribution (Miniconda/Anaconda) directly onto your USB drive. This step requires only writing privileges to the USB, not admin access on the school PC.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <span class="step-num mr-4">B</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Activate the Environment</p>
+                                <p class="text-gray-600">Open the command prompt, navigate to your portable Python installation, and activate the virtual environment (e.g., <code>.\venv\Scripts\activate</code>).</p>
+                            </div>
+                        </div>
+
+                        <div class="flex">
+                            <span class="step-num mr-4">C</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Install Client Libraries</p>
+                                <p class="text-gray-600">With the environment active, run the following command to install PyTorch and other required libraries:</p>
+                                <pre class="bg-gray-100 p-3 rounded-lg mt-2 text-sm text-red-700 overflow-x-auto font-mono">pip install -r requirements.txt</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Run and Enroll Instructions -->
+                <div class="card p-6">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700">3. Run and Enroll Your Worker</h2>
+                    <div class="space-y-6">
+                        <div class="flex">
+                            <span class="step-num mr-4">A</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Launch the Client</p>
+                                <p class="text-gray-600">From the activated environment (and the same directory as <code>client.py</code>), start the worker process:</p>
+                                <pre class="bg-gray-100 p-3 rounded-lg mt-2 text-sm text-red-700 overflow-x-auto font-mono">python client.py</pre>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <span class="step-num mr-4">B</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Get the Token</p>
+                                <p class="text-gray-600">The client will print an **8-digit registration token** and wait for approval.</p>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <span class="step-num mr-4">C</span>
+                            <div>
+                                <p class="font-semibold text-gray-800">Approve the Worker</p>
+                                <p class="text-gray-600">Log in to the main Orchestrator Management Panel, enter the 8-digit token, and approve the worker to begin submitting tasks!</p>
+                                <div class="mt-4">
+                                    <a href="https://manage.presidentialAIchallenge.thaliathenerd.dev" target="_blank" class="btn-primary">Go to Management Panel</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
